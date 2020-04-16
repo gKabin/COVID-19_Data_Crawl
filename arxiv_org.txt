@@ -1,0 +1,16 @@
+let
+    Source = Web.BrowserContents("https://arxiv.org/search/advanced?advanced=&terms-0-operator=AND&terms-0-term=sars-cov-2&terms-0-field=title&classification-physics_archives=all&classification-include_cross_list=include&date-filter_by=all_dates&date-year=&date-from_date=&date-to_date=&date-date_type=submitted_date&abstracts=show&size=200&order=-announced_date_first"),
+    #"Extracted Table From Html" = Html.Table(Source, {{"Title", ".is-5"}, {"Authors", ".authors"}, {"Cited as", ".list-title > A"}, {"Posted", ".arxiv-result > :nth-child(5)"}, {"Abstract", "[id*=""-abstract-short""]"}}, [RowSelector=".arxiv-result"]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Extracted Table From Html",{{"Title", type text}, {"Authors", type text}, {"Cited as", type text}, {"Posted", type text}, {"Abstract", type text}}),
+    #"Split Column by Delimiter" = Table.SplitColumn(#"Changed Type", "Authors", Splitter.SplitTextByEachDelimiter({"Authors:"}, QuoteStyle.Csv, false), {"Authors.1", "Authors.2"}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"Authors.1", type text}, {"Authors.2", type text}}),
+    #"Split Column by Delimiter1" = Table.SplitColumn(#"Changed Type1", "Posted", Splitter.SplitTextByEachDelimiter({"Submitted "}, QuoteStyle.Csv, false), {"Posted.1", "Posted.2"}),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Split Column by Delimiter1",{{"Posted.1", type text}, {"Posted.2", type text}}),
+    #"Split Column by Delimiter2" = Table.SplitColumn(#"Changed Type2", "Posted.2", Splitter.SplitTextByEachDelimiter({";"}, QuoteStyle.Csv, false), {"Posted.2.1", "Posted.2.2"}),
+    #"Changed Type3" = Table.TransformColumnTypes(#"Split Column by Delimiter2",{{"Posted.2.1", type date}, {"Posted.2.2", type text}}),
+    #"Split Column by Delimiter3" = Table.SplitColumn(#"Changed Type3", "Abstract", Splitter.SplitTextByEachDelimiter({"…"}, QuoteStyle.Csv, true), {"Abstract.1", "Abstract.2"}),
+    #"Changed Type4" = Table.TransformColumnTypes(#"Split Column by Delimiter3",{{"Abstract.1", type text}, {"Abstract.2", type text}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type4",{"Authors.1", "Posted.1", "Posted.2.2", "Abstract.2"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"Authors.2", "Authors"}, {"Posted.2.1", "Posted"}, {"Abstract.1", "Abstract"}})
+in
+    #"Renamed Columns"
