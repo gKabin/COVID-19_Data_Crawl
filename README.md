@@ -1,1 +1,1 @@
-# COVID-19_Data_Crawl
+Open the .pbix file in Power BI Desktop.
