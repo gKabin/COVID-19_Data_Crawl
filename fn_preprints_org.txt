@@ -1,0 +1,21 @@
+(PageNumber as text) =>
+let
+    Source = Web.BrowserContents("https://www.preprints.org/search?search1=covid-19&field1=title_keywords&field2=authors&clause=AND&search2=&page_num="&PageNumber&""),
+    #"Extracted Table From Html" = Html.Table(Source, {{"Title", ".search-content-box > :nth-child(2) > :nth-child(1)"}, {"Authors", ".search-content-box-author"}, {"Subjects/Keywords", "DIV:nth-child(3):nth-last-child(4)"}, {"Posted", ".show-for-large-up:nth-child(4)"}, {"Abstract", "[id*=""abstract_content_""]"}, {"DOI", ".content-box-header-element-5"}}, [RowSelector=".search-content-box"]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Extracted Table From Html",{{"Title", type text}, {"Authors", type text}, {"Subjects/Keywords", type text}, {"Posted", type text}, {"Abstract", type text}, {"DOI", type text}}),
+    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each true),
+    #"Split Column by Delimiter" = Table.SplitColumn(#"Filtered Rows", "DOI", Splitter.SplitTextByEachDelimiter({"doi:"}, QuoteStyle.Csv, false), {"DOI.1", "DOI.2"}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"DOI.1", type text}, {"DOI.2", type text}}),
+    #"Split Column by Delimiter1" = Table.SplitColumn(#"Changed Type1", "Posted", Splitter.SplitTextByEachDelimiter({"Online: "}, QuoteStyle.Csv, false), {"Posted.1", "Posted.2"}),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Split Column by Delimiter1",{{"Posted.1", type text}, {"Posted.2", type text}}),
+    #"Split Column by Delimiter2" = Table.SplitColumn(#"Changed Type2", "Posted.2", Splitter.SplitTextByEachDelimiter({" ("}, QuoteStyle.Csv, false), {"Posted.2.1", "Posted.2.2"}),
+    #"Changed Type3" = Table.TransformColumnTypes(#"Split Column by Delimiter2",{{"Posted.2.1", type date}, {"Posted.2.2", type text}}),
+    #"Split Column by Delimiter3" = Table.SplitColumn(#"Changed Type3", "Subjects/Keywords", Splitter.SplitTextByEachDelimiter({"Keywords: "}, QuoteStyle.Csv, true), {"Subjects/Keywords.1", "Subjects/Keywords.2"}),
+    #"Changed Type4" = Table.TransformColumnTypes(#"Split Column by Delimiter3",{{"Subjects/Keywords.1", type text}, {"Subjects/Keywords.2", type text}}),
+    #"Split Column by Delimiter4" = Table.SplitColumn(#"Changed Type4", "Subjects/Keywords.1", Splitter.SplitTextByEachDelimiter({"Subject: "}, QuoteStyle.Csv, false), {"Subjects/Keywords.1.1", "Subjects/Keywords.1.2"}),
+    #"Changed Type5" = Table.TransformColumnTypes(#"Split Column by Delimiter4",{{"Subjects/Keywords.1.1", type text}, {"Subjects/Keywords.1.2", type text}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type5",{"Subjects/Keywords.1.1", "Posted.1", "Posted.2.2", "DOI.1"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"DOI.2", "DOI"}, {"Posted.2.1", "Posted"}, {"Subjects/Keywords.2", "Keywords"}, {"Subjects/Keywords.1.2", "Subject"}}),
+    #"Reordered Columns" = Table.ReorderColumns(#"Renamed Columns",{"Title", "Authors", "Subject", "Keywords", "Posted", "DOI", "Abstract"})
+in
+    #"Reordered Columns"
