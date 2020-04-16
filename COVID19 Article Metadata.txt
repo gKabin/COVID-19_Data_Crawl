@@ -1,0 +1,11 @@
+let
+    Query1 = {1..156},
+    #"Converted to Table" = Table.FromList(Query1, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Changed Type" = Table.TransformColumnTypes(#"Converted to Table",{{"Column1", type text}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "PageNumber"}}),
+    #"Invoked Custom Function" = Table.AddColumn(#"Renamed Columns", "fn_COVID19", each fn_COVID19([PageNumber])),
+    #"Expanded fn_COVID19" = Table.ExpandTableColumn(#"Invoked Custom Function", "fn_COVID19", {"Title", "Authors", "DOI", "Posted"}, {"Title", "Authors", "DOI", "Posted"}),
+    #"Removed Errors" = Table.RemoveRowsWithErrors(#"Expanded fn_COVID19", {"Title", "Authors", "DOI", "Posted"}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Removed Errors",{{"Posted", type date}})
+in
+    #"Changed Type1"

@@ -1,0 +1,13 @@
+(PageNumber as text) =>
+let
+    Source = Web.BrowserContents("https://connect.biorxiv.org/relate/content/181?page="&PageNumber&""),
+    #"Extracted Table From Html" = Html.Table(Source, {{"Title", ".cit-title"}, {"Authors", ".highwire-cite-authors"}, {"DOI", ".highwire-cite-metadata"}}, [RowSelector=".highwire-article-citation"]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Extracted Table From Html",{{"Title", type text}, {"Authors", type text}, {"DOI", type text}}),
+    #"Split Column by Delimiter" = Table.SplitColumn(#"Changed Type", "DOI", Splitter.SplitTextByEachDelimiter({"Posted: "}, QuoteStyle.Csv, true), {"DOI.1", "DOI.2"}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"DOI.1", type text}, {"DOI.2", type date}}),
+    #"Split Column by Delimiter1" = Table.SplitColumn(#"Changed Type1", "DOI.1", Splitter.SplitTextByEachDelimiter({" "}, QuoteStyle.Csv, false), {"DOI.1.1", "DOI.1.2"}),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Split Column by Delimiter1",{{"DOI.1.1", type text}, {"DOI.1.2", type text}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type2",{"DOI.1.2"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"DOI.1.1", "DOI"}, {"DOI.2", "Posted"}})
+in
+    #"Renamed Columns"
