@@ -59,7 +59,7 @@ for page in pages:
 df_show_info = pd.DataFrame(
     {'Article Title': list_titles,
      'Authors': list_authors,
-     'DOI': doi,
+     'DOI': list_doi,
      'Published Date': list_dates,
      'Link': list_links,
      'Abstracts': list_abstracts})
