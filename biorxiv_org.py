@@ -16,7 +16,7 @@ list_dates = []
 list_links = []
 list_abstracts = [] 
 
-pages = np.arange(1, 3)
+pages = np.arange(1, 50)
 
 for page in pages: 
     
@@ -27,8 +27,10 @@ for page in pages:
     doi_date = soup.find_all('div', class_ = 'highwire-cite-metadata')
     
     sleep(randint(2,10))
+    
+    article_num = len(covid19)
 
-    for n in np.arange(0, 10):
+    for n in np.arange(0, article_num):
         
         # Getting the title
         title = covid19[n].find('span', class_ = 'highwire-cite-title').a.get_text()
