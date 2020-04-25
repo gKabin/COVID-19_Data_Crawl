@@ -14,7 +14,7 @@ list_authors = []
 list_doi = []
 list_dates = []
 list_links = []
-list_abstracts = []
+list_abstract = []
 
 pages = np.arange(1, 8)
 
@@ -25,40 +25,56 @@ for page in pages:
     page = requests.get(url)
     
     soup = BeautifulSoup(page.text, 'html.parser')
-    covid19_article = soup.find_all('li', class_='m-result')
+    covid19 = soup.find_all('li', class_='m-result')
 
-    
     sleep(randint(2,10))
     
-    articles_in_page = len(covid19_article)
+    article_num = len(covid19)
 
-    for n in np.arange(0, articles_in_page):
+    for n in np.arange(0, article_num):
 
         # Getting the title
-        title = covid19_article[n].find('strong', class_ = 'm-result__title f-h4').get_text()
+        title = covid19[n].find('strong', class_ = 'm-result__title f-h4').get_text()
         list_titles.append(title)
 
-        #Getting authors
-        authors = covid19_article[n].find('em', class_ = 'm-result__author f-author').get_text()
-        list_authors.append(authors)
-
-        #Getting DOI
-        doi = covid19_article[n].find('em', class_ = 'm-result__publisher f-author').get_text()
-        list_doi.append(doi)
-
         #Getting the published date
-        dates = covid19_article[n].find('em', class_ = 'm-result__date f-tag').get_text()
+        dates = covid19[n].find('em', class_ = 'm-result__date f-tag').get_text()
         list_dates.append(dates)
 
         # Getting the link of the article
         site = "https://www.nejm.org"
-        site1 = covid19_article[n].find('a', class_ = 'js__sliLearn m-result__link')['href']
-        link = site + site1
+        get_href = covid19[n].find('a', class_ = 'js__sliLearn m-result__link')['href']
+        link = site + get_href
         list_links.append(link)
+        
+        # Getting DOI
+        doi = get_href.split("full/", 1)
+        list_doi.append(doi[1])
+        
+        # Reading the content
+        article = requests.get(link)
+        article_content = article.text
+        soup_data = BeautifulSoup(article_content, 'html.parser')
+        covid19_author = soup_data.find_all('ul', class_='m-article-header__authors f-ui')
+        covid19_abstract = soup_data.find_all('section', class_='o-article-body__section')
+
+        #Getting authors
+        author_num = covid19_author[0].find_all('li')
+        list_author = []
+        for a in np.arange(0, len(author_num)):
+            author = author_num[a].get_text()
+            list_author.append(author)
+            authors = " ".join(list_author)
+        list_authors.append(authors)
 
         #Getting abstracts
-        abstracts = covid19_article[n].find('span', class_ = 'm-result__blurb f-blurb').get_text()
-        list_abstracts.append(abstracts)
+        para_num = covid19_abstract[0].find_all('p')
+        list_paragraphs = []
+        for p in np.arange(0, len(para_num)):
+            paragraph = para_num[p].get_text()
+            list_paragraphs.append(paragraph)
+            abstract = " ".join(list_paragraphs)
+        list_abstract.append(abstract)
 
 #df_show_info
 df_show_info = pd.DataFrame(
@@ -67,6 +83,6 @@ df_show_info = pd.DataFrame(
      'DOI': list_doi,
      'Published Date': list_dates,
      'Link': list_links,
-     'Abstracts': list_abstracts})
+     'Abstracts': list_abstract})
 
 print(df_show_info)
