@@ -12,3 +12,11 @@
  COVID-19 Preprints Crawl.pbix file have data from biorxiv.org
 
  COVID-19 Journals Crawl (preprints.org).pbix file have the data from arxiv.org & preprints.org
+ 
+ 
+ #Packages to install
+ 
+ pip install requests
+ pip install BeautifulSoup
+ pip install pandas
+ pip install numpy
