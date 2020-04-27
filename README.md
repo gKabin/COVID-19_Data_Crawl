@@ -14,9 +14,9 @@
  COVID-19 Journals Crawl (preprints.org).pbix file have the data from arxiv.org & preprints.org
  
  
-# Packages to install
+## Packages to install
  
-  pip install requests
-  pip install BeautifulSoup
-  pip install pandas
-  pip install numpy
+1. pip install requests
+2. pip install BeautifulSoup
+3. pip install pandas
+4. pip install numpy
