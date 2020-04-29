@@ -1,0 +1,12 @@
+let
+    Source = {1..10},
+    #"Converted to Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Changed Type" = Table.TransformColumnTypes(#"Converted to Table",{{"Column1", type text}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1", "PageNumber"}}),
+    #"Invoked Custom Function" = Table.AddColumn(#"Renamed Columns", "fn_preprints_org", each fn_preprints_org([PageNumber])),
+    #"Expanded fn_preprints_org" = Table.ExpandTableColumn(#"Invoked Custom Function", "fn_preprints_org", {"Title", "Authors", "Subject", "Keywords", "Posted", "DOI", "Abstract"}, {"Title", "Authors", "Subject", "Keywords", "Posted", "DOI", "Abstract"}),
+    #"Removed Columns" = Table.RemoveColumns(#"Expanded fn_preprints_org",{"PageNumber"}),
+    #"Removed Blank Rows" = Table.SelectRows(#"Removed Columns", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null}))),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Removed Blank Rows",{{"Posted", type date}})
+in
+    #"Changed Type1"
