@@ -22,7 +22,7 @@ pages_urls = []
 # Parsing URL function
 def getAndParseURL(url):
     page = requests.get(url)
-    soup = BeautifulSoup(page.text, 'html.parser')
+    soup = BeautifulSoup(page.text, 'lxml')
     return(soup)
 
 # Getting Page URLs
@@ -78,10 +78,9 @@ for url in pages_urls:
         trim_date = date[date.find(": ")+1 : date.find("(")]
         list_date.append(trim_date)
 
-        trye = covid19[n].find_all('div')
-    
+        covid_19_keywords = covid19[n].find_all('div')
         # Getting Published date
-        keywords = trye[4].get_text()
+        keywords = covid_19_keywords[4].get_text()
         trim_keywords = keywords.split('Keywords: \n', 1)
         list_keywords.append(trim_keywords[1])
 
