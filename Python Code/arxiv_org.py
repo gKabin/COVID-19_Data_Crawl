@@ -21,7 +21,7 @@ pages_urls = []
 #Parsing URL function
 def getAndParseURL(url):
     page = requests.get(url)
-    soup = BeautifulSoup(page.text, 'html.parser')
+    soup = BeautifulSoup(page.text, 'lxml')
     return(soup)
 
 #Getting Page URLs
