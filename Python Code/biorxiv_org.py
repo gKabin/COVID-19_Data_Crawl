@@ -1,81 +1,79 @@
 import requests
 from requests import get
-from bs4 import BeautifulSoup
-import pandas as pd
+import feedparser
 import numpy as np
-import re
 import time
 
-start_time = time.time()
 
-headers = {"Accept-Language": "en-US,en;q=0.5"}
-
-list_titles = []
-list_authors = []
-list_doi = []
-list_dates = []
-list_links = []
-list_abstract = []
-
-# Parsing URL function
+#Parsing URL function
 def getAndParseURL(url):
-    page = requests.get(url)
-    soup = BeautifulSoup(page.text, 'html.parser')
-    return(soup)
+    data = feedparser.parse(url)
+    return(data)
 
-pages = np.arange(1, 10)
+def crawl():
+    start_time = time.time()
 
-for page in pages: 
-    
-    #Parsing Pages URL
-    main_url = "https://connect.biorxiv.org/relate/content/181?page=" + str(page) + " "
-    soup = getAndParseURL(main_url) 
-    
-    covid19 = soup.find_all('div', class_='highwire-article-citation highwire-citation-type-highwire-article')
-    doi_date = soup.find_all('div', class_ = 'highwire-cite-metadata')
-    
-    #Getting Article Contents
-    article_num = len(covid19)
-    for n in np.arange(0, article_num):
-        
-        #Getting the title
-        title = covid19[n].find('span', class_ = 'highwire-cite-title').a.get_text()
-        list_titles.append(title)
+    headers = {"Accept-Language": "en-US,en;q=0.5"}
 
-        #Getting doi and published date
-        doi_dates = doi_date[n].find('span', class_ = 'highwire-cite-metadata-journal').get_text()
-        new_doi_dates = doi_dates.split(" — Posted: ", 1)
-        list_doi.append(new_doi_dates[0])
-        list_dates.append(new_doi_dates[1])
+    list_titles = []
+    list_authors = []
+    list_doi = []
+    list_dates = []
+    list_links = []
+    list_abstract = []
+    list_keywords = []
+    json_abstract = []
 
-        #Getting the link of the article
-        link = covid19[n].find('a', class_ = 'highwire-cite-linked-title')['href']
-        list_links.append(link)
-        
-        #Parsing Article URL
-        soup_data = getAndParseURL(link)
-        covid19_article = soup_data.find_all('div', class_='panel-pane pane-highwire-article-citation')
-        covid19_abstract = soup_data.find_all('div', class_='article abstract-view')
 
-        #Getting authors
-        authors = covid19_article[1].find('span', class_ = 'highwire-citation-authors').get_text()
-        list_authors.append(authors)
+    new_page = "https://connect.biorxiv.org/relate/feed/181"
 
-        #Getting abstract
-        abstract = covid19_abstract[0].find('div', class_ = 'section abstract').p.get_text()
-        list_abstract.append(abstract)
+    #Getting article contents
+    # soup = getAndParseURL(new_page)
+    soup = feedparser.parse(new_page)
+    article = soup['entries']
 
-#df_show_info
-df_show_info = pd.DataFrame(
-    {'Article Title': list_titles,
-     'Authors': list_authors,
-     'DOI': list_doi,
-     'Published Date': list_dates,
-     'Link': list_links,
-     'Abstract': list_abstract
-    })
+    for n in np.arange(0, len(article)):
+            
+            #Getting the title
+            title = article[n].title.strip()
+            list_titles.append(title)
+            
+            #Getting the link of the article
+            link = article[n].link.strip()
+            trim_link = link.split('?rss=1', 1)
+            list_links.append(trim_link[0])
+            
+            #Getting Published date
+            date = article[n].date.strip()
+            list_dates.append(date)
+            
+            #Getting DOI
+            doi = article[n].dc_identifier.strip()
+            trim_doi = doi.split(":", 1)
+            list_doi.append(trim_doi[1])
+            
+            #Getting abstract
+            abstract = article[n].description.strip()
+            list_abstract.append(abstract)
+            
+            #Getting authors
+            author_num = article[n].authors
+            list_author = []
+            for a in np.arange(0, len(author_num)):
+                list_author.append(author_num[a].get('name', ''))
+                authors = ";".join(list_author)
+            list_authors.append(authors)
 
-end_time = time.time()
-print("--- Execution time is: %.2f seconds ---" % (end_time - start_time))
+            json_abstract.append({
+                'title': title,
+                'url': trim_link,
+                'authors': authors,
+                'doi': doi,
+                'abstract': abstract,
+                'date': date
+            })
+    end_time = time.time()
+    print("--- Execution time is: %.2f seconds ---" % (end_time - start_time))        
+    return json_abstract
 
-print(df_show_info)
+print(crawl())
