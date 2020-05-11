@@ -20,3 +20,4 @@
 2. pip install BeautifulSoup
 3. pip install pandas
 4. pip install numpy
+5. pip install feedparser
